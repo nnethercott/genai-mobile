@@ -27,7 +27,7 @@ migrate_working_dir/
 .dart_tool/
 build/
 temp/
-lib/assets/models/*
+/assets/models/*
 test/inferences/assets
 *.so
 dev/
