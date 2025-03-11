@@ -9,6 +9,7 @@ import 'package:genai_mobile/repositories/fllama_repository.dart';
 import 'package:genai_mobile/repositories/prompt_repository.dart';
 import 'package:genai_mobile/ui/documents/bloc/cubit.dart';
 import 'package:genai_mobile/ui/home/bloc/cubit.dart';
+import 'package:genai_mobile/ui/home/bloc/model_selection_cubit.dart';
 import 'package:genai_mobile/ui/home/home_page.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:path_provider/path_provider.dart';
@@ -58,17 +59,26 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        return BlocProvider(
+    return MultiBlocProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        BlocProvider(create: (_) => ModelSelectionCubit()),
+        BlocProvider(
           create: (context) => DocumentsCubit(DocumentsRepository.instance)..loadDocuments(),
-          child: MaterialApp(
+        ),
+      ],
+      child: Builder(
+        builder: (context) {
+          final themeProvider = context.watch<ThemeProvider>();
+          return MaterialApp(
             title: 'GenAI Mobile',
-            theme: themeProvider.currentTheme,
+            theme: ThemeData.light(),
+            darkTheme: ThemeData.dark(),
+            themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
             home: const HomePage(),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
