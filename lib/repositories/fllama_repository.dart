@@ -19,7 +19,7 @@ class FllamaRepository {
   String? _mmprojPath;
   final _temperature = 0.5;
   final _topP = 1.0;
-  final int _maxTokens = 100;
+  final int _maxTokens = 2000;
 
   ToolFunction? _tool;
 
@@ -76,6 +76,7 @@ class FllamaRepository {
       allResponses.add(responseJson);
       latestResultString = response;
       latestResultJson = responseJson;
+      print('latestResultString: $latestResultString');
     });
     return InferenceResponse(
       requestId: requestId,

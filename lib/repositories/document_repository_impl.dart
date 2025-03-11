@@ -21,6 +21,8 @@ class DocumentRepositoryImpl implements DocumentsRepository {
   Future<void> addDocument(Document document) async {
     await _init();
     await Hive.box<Document>(_boxName).add(document);
+
+    //rag engine
   }
 
   @override
