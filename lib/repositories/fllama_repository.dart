@@ -39,7 +39,7 @@ class FllamaRepository {
     this._tool,
   );
 
-  Future<InferenceResponse> runInference(String prompt, List<String> allResponses) async {
+  Future<InferenceResponse> runInference(String prompt, List<Message> allResponses) async {
     final request = OpenAiRequest(
       tools: [
         if (_tool != null)
@@ -50,7 +50,8 @@ class FllamaRepository {
       ],
       maxTokens: _maxTokens.round(),
       messages: [
-        Message(Role.user, prompt),
+        ...allResponses,
+        Message(Role.user, prompt)
       ],
       numGpuLayers: 99,
       /* this seems to have no adverse effects in environments w/o GPU support, ex. Android and web */
@@ -71,14 +72,14 @@ class FllamaRepository {
       },
     );
 
-    List<String> allResponses = [];
+    List<String> pastMessages = [];
     String latestResultJson = '';
     String latestResultString = '';
 
     final completer = Completer<void>();
 
     int requestId = await fllamaChat(request, (response, responseJson, done) {
-      allResponses.add(responseJson);
+      pastMessages.add(responseJson);
       latestResultString = response;
       latestResultJson = responseJson;
       if (done) {
@@ -92,7 +93,7 @@ class FllamaRepository {
       requestId: requestId,
       latestResultString: latestResultString,
       latestResultJson: latestResultJson,
-      allResponses: allResponses,
+      allResponses: pastMessages,
     );
   }
 }

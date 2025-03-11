@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:fllama/fllama.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genai_mobile/models/document.dart';
 import 'package:genai_mobile/models/prompt.dart';
@@ -40,17 +41,34 @@ class ChatCubit extends Cubit<ChatState> {
 
       // Save the prompt to history
       final prompt = Prompt(
-        '$message\n some optional context to help with your answer (may be empty): $content',
+        content.isEmpty ? message : '$message\nsome optional context to help with your answer: $content',
         DateTime.now(),
       );
       await _promptRepository.addPrompt(prompt);
       var allPrompts = _promptRepository.promptsHistory();
       print('allPrompts: $allPrompts');
 
+      final pastMessages = await chatMessagesRepository.getMessages().then((messages) {
+        return messages.reversed.map((m) {
+          final role = m.isUser ? Role.user : Role.assistant;
+          return Message(role, m.text);
+        }).toList();
+      });
+
+      print("###################");
+      for(final m in pastMessages){
+        print('Role: ${m.role}, text: ${m.text}');
+      }
+
       // Get response from LLM
       final userMessage = await chatMessagesRepository.addMessage(text: message, isUserMessage: true);
       emit(state.copyWith(messages: [userMessage, ...state.messages]));
-      final response = await _fllamaRepository.runInference('$message\n here some context: $content', []);
+
+      final response = await _fllamaRepository.runInference(
+        prompt.prompt,
+        // pastMessages.sublist(0, min(10, pastMessages.length)) // send pas 4 exchanges
+        []
+      );
       final aiMessage = await chatMessagesRepository.addMessage(text: response.latestResultString, isUserMessage: false);
       emit(state.copyWith(
         status: ChatStatus.success,
