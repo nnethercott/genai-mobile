@@ -1,6 +1,5 @@
 import 'package:genai_mobile/models/document_type.dart';
-import 'package:hive/hive.dart';
-
+import 'package:hive_ce/hive.dart';
 class Document extends HiveObject {
   String id; // UUID.v4
   String? content; // content can be null if the document is a file
