@@ -5,10 +5,12 @@ nextTypeId: 3
 types:
   Prompt:
     typeId: 0
-    nextIndex: 1
+    nextIndex: 2
     fields:
       prompt:
         index: 0
+      timestamp:
+        index: 1
   Document:
     typeId: 1
     nextIndex: 6

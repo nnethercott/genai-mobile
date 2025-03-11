@@ -18,15 +18,18 @@ class PromptAdapter extends TypeAdapter<Prompt> {
     };
     return Prompt(
       fields[0] as String,
+      fields[1] as DateTime,
     );
   }
 
   @override
   void write(BinaryWriter writer, Prompt obj) {
     writer
-      ..writeByte(1)
+      ..writeByte(2)
       ..writeByte(0)
-      ..write(obj.prompt);
+      ..write(obj.prompt)
+      ..writeByte(1)
+      ..write(obj.timestamp);
   }
 
   @override
