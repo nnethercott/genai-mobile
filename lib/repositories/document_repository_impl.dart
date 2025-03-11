@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:genai_mobile/models/document.dart';
-
 import 'package:genai_mobile/models/document_type.dart';
 import 'package:genai_mobile/rag/engine.dart';
 import 'package:hive_ce/hive.dart';
@@ -38,8 +37,12 @@ class DocumentRepositoryImpl implements DocumentsRepository {
   @override
   Future<void> deleteDocument(Document document) async {
     await _isReady.future;
-    await Hive.box<Document>(_boxName).delete(document.id);
-    await vectorStore!.delete(document);
+    final box = Hive.box<Document>(_boxName);
+    final key = box.values.toList().indexWhere((d) => d.id == document.id);
+    if (key != -1) {
+      await box.deleteAt(key);
+    }
+    await vectorStore?.delete(document);
   }
 
   @override

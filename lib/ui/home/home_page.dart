@@ -147,14 +147,6 @@ class _HomePageState extends State<HomePage> {
                   Container(decoration: BoxDecoration(color: Theme.of(context).cardColor), child: _buildTextComposer()),
                 ],
               ),
-              floatingActionButton: FloatingActionButton(
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                onPressed: () {
-                  _scaffoldKey.currentState?.openDrawer();
-                },
-                child: const Icon(Icons.attach_file),
-              ),
             );
           }
 
