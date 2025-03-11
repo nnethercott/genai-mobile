@@ -4,10 +4,12 @@
 
 import 'package:hive_ce/hive.dart';
 import 'package:genai_mobile/dao/hive_adapters.dart';
+import 'package:genai_mobile/models/document_type.dart';
 
 extension HiveRegistrar on HiveInterface {
   void registerAdapters() {
     registerAdapter(DocumentAdapter());
+    registerAdapter(DocumentTypeAdapter());
     registerAdapter(PromptAdapter());
   }
 }

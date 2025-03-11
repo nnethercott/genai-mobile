@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:genai_mobile/models/document.dart';
 import 'package:image_picker/image_picker.dart';
 
 class DocumentsDrawer extends StatelessWidget {
+  final List<Document> documents;
   final Future<void> Function() onPickFile;
   final Future<void> Function() onTakePicture;
   final Future<void> Function() onPickImage;
@@ -13,6 +15,7 @@ class DocumentsDrawer extends StatelessWidget {
 
   const DocumentsDrawer({
     super.key,
+    required this.documents,
     required this.onPickFile,
     required this.onTakePicture,
     required this.onPickImage,
@@ -57,6 +60,11 @@ class DocumentsDrawer extends StatelessWidget {
                   title: const Text('Take a picture'),
                   onTap: onTakePicture,
                 ),
+                ...documents.map((document) => ListTile(
+                      leading: const Icon(Icons.file_present),
+                      title: Text(document.title),
+                      onTap: () => onDocumentSelected(File(document.contentPath ?? '')),
+                    )),
               ],
             ),
           ),
