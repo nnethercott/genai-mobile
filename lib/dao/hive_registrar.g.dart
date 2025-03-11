@@ -10,6 +10,7 @@ extension HiveRegistrar on HiveInterface {
   void registerAdapters() {
     registerAdapter(DocumentAdapter());
     registerAdapter(DocumentTypeAdapter());
+    registerAdapter(DocumentTypeAdapter());
     registerAdapter(PromptAdapter());
   }
 }

@@ -11,6 +11,8 @@ class InternalDoc {
   @Id()
   int id = 0;
 
+  // Foreign key to document database
+  @Index(type: IndexType.hash)
   String uid;
 
   @HnswIndex(dimensions: 384)
@@ -34,7 +36,7 @@ class ObjectBoxService implements VectorService {
       directory: p.join(docsDir.path, "docs_store"),
     );
 
-    // load model from disk
+    // initialize model
     final modelPath = await getModelPath('embed.onnx');
     final model = MiniLmL6V2.load(modelPath);
 
@@ -42,31 +44,40 @@ class ObjectBoxService implements VectorService {
   }
 
   @override
-  Future<void> insert(Document doc) async {
-    final embedding = await getEmbeding(doc.content!, embeddingModel);
-    final x = InternalDoc(doc.id, embedding);
+  Future<void> add(Document doc) async {
+    if (doc.content != null) {
+      final embedding = await getEmbeding(doc.content!, embeddingModel);
+      final x = InternalDoc(doc.id, embedding);
 
+      final box = store.box<InternalDoc>();
+      box.put(x);
+    }
+  }
+
+  @override
+  Future<void> delete(Document doc) async {
     final box = store.box<InternalDoc>();
-    box.put(x);
+    await box.query(InternalDoc_.uid.equals(doc.id)).build().removeAsync();
   }
 
   @override
-  Future<int> purge() async {
-    await Future.delayed(Duration(seconds: 1));
-    return 1;
-  }
-
-  @override
-  Future<List<String>> query(String text, [int nNearestNeighbors = 10]) async {
-    final queryEmbedding = await getEmbeding(text, embeddingModel);
+  Future<List<String>> query(String prompt, [int nNearestNeighbors = 10]) async {
+    final queryEmbedding = await getEmbeding(prompt, embeddingModel);
 
     final box = store.box<InternalDoc>();
     final query =
-        box.query(InternalDoc_.embedding.nearestNeighborsF32(queryEmbedding, nNearestNeighbors)).build();
+        box
+            .query(
+              InternalDoc_.embedding.nearestNeighborsF32(
+                queryEmbedding,
+                nNearestNeighbors,
+              ),
+            )
+            .build();
 
     // get results
     final results = await query.findWithScoresAsync();
-    return results.map((o)=>o.object.uid).toList();
+    return results.map((o) => o.object.uid).toList();
   }
 }
 
@@ -83,10 +94,7 @@ Future<List<double>> getEmbeding(String text, MiniLmL6V2 model) async {
 
 /// Interface for document retreival
 abstract class VectorService {
-  // document insertion
-  Future<void> insert(Document doc);
-  // return ids for most similar
-  Future<List<String>> query(String query, [int nNearestNeighbors = 10]);
-  // purge and return howmany we cleared
-  Future<int> purge();
+  Future<void> add(Document doc);
+  Future<void> delete(Document doc);
+  Future<List<String>> query(String prompt, [int nNearestNeighbors = 10]);
 }
