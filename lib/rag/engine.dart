@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:fonnx/models/minilml6v2/mini_lm_l6_v2.dart';
 import 'package:path_provider/path_provider.dart';
 import 'utils.dart';
@@ -25,22 +27,34 @@ class InternalDoc {
 class ObjectBoxService implements VectorService {
   late final Store store;
   late final MiniLmL6V2 embeddingModel;
+  static ObjectBoxService? _instance;
 
   // Constructors
   ObjectBoxService._create(this.store, this.embeddingModel);
 
   static Future<ObjectBoxService> create() async {
-    // initialize object store
-    final docsDir = await getApplicationDocumentsDirectory();
-    final store = await openStore(
-      directory: p.join(docsDir.path, "docs_store"),
-    );
+    if (_instance != null) {
+      print(_instance!._getAll());
+      return _instance!;
+    }
 
-    // initialize model
+    // Initialize model
     final modelPath = await getModelPath('embed.onnx');
     final model = MiniLmL6V2.load(modelPath);
 
-    return ObjectBoxService._create(store, model);
+    // Initialize object store
+    final docsDir = await getApplicationDocumentsDirectory();
+    final dbPath = p.join(docsDir.path, "docs_store");
+
+    final store = await openStore(directory: dbPath);
+    _instance = ObjectBoxService._create(store, model);
+    return _instance!;
+  }
+
+  @override
+  List<InternalDoc> _getAll() {
+    final box = store.box<InternalDoc>();
+    return box.getAll();
   }
 
   @override
@@ -61,7 +75,10 @@ class ObjectBoxService implements VectorService {
   }
 
   @override
-  Future<List<String>> query(String prompt, [int nNearestNeighbors = 10]) async {
+  Future<List<String>> query(
+    String prompt, [
+    int nNearestNeighbors = 10,
+  ]) async {
     final queryEmbedding = await getEmbeding(prompt, embeddingModel);
 
     final box = store.box<InternalDoc>();
@@ -95,6 +112,7 @@ Future<List<double>> getEmbeding(String text, MiniLmL6V2 model) async {
 /// Interface for document retreival
 abstract class VectorService {
   Future<void> add(Document doc);
+  List<InternalDoc> _getAll();
   Future<void> delete(Document doc);
   Future<List<String>> query(String prompt, [int nNearestNeighbors = 10]);
 }

@@ -29,7 +29,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
   Future<void> loadDocuments() async {
     try {
       emit(DocumentsLoading());
-      final documents = await _repository.getDocuments();
+      final documents = await _repository.getAllDocuments();
       emit(DocumentsLoaded(documents));
     } catch (e) {
       emit(DocumentsError(e.toString()));
@@ -51,7 +51,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       emit(DocumentsLoading());
       Document document = await documentFromPdf(path, DocumentType.documentation);
       await _repository.addDocument(document);
-      final documents = await _repository.getDocuments();
+      final documents = await _repository.getAllDocuments();
       emit(DocumentsLoaded(documents));
     } catch (e) {
       emit(DocumentsError(e.toString()));
@@ -62,7 +62,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
     try {
       emit(DocumentsLoading());
       await _repository.updateDocument(document);
-      final documents = await _repository.getDocuments();
+      final documents = await _repository.getAllDocuments();
       emit(DocumentsLoaded(documents));
     } catch (e) {
       emit(DocumentsError(e.toString()));
@@ -73,7 +73,7 @@ class DocumentsCubit extends Cubit<DocumentsState> {
     try {
       emit(DocumentsLoading());
       await _repository.deleteDocument(document);
-      final documents = await _repository.getDocuments();
+      final documents = await _repository.getAllDocuments();
       emit(DocumentsLoaded(documents));
     } catch (e) {
       emit(DocumentsError(e.toString()));

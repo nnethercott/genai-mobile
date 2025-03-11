@@ -20,31 +20,31 @@ export 'package:objectbox/objectbox.dart'; // so that callers only have to impor
 
 final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
-      id: const obx_int.IdUid(1, 5911036239171600757),
+      id: const obx_int.IdUid(1, 2499077018741701598),
       name: 'InternalDoc',
-      lastPropertyId: const obx_int.IdUid(3, 8668920910156642289),
+      lastPropertyId: const obx_int.IdUid(3, 1159915213455896323),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(1, 2893954332393227798),
+            id: const obx_int.IdUid(1, 317985921135770351),
             name: 'id',
             type: 6,
             flags: 1),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(2, 2917185864104047775),
-            name: 'embedding',
-            type: 28,
-            flags: 8,
-            indexId: const obx_int.IdUid(1, 943994291960045020),
-            hnswParams: obx_int.ModelHnswParams(
-              dimensions: 384,
-            )),
-        obx_int.ModelProperty(
-            id: const obx_int.IdUid(3, 8668920910156642289),
+            id: const obx_int.IdUid(2, 5763085950042354199),
             name: 'uid',
             type: 9,
             flags: 2048,
-            indexId: const obx_int.IdUid(2, 4035030762124604165))
+            indexId: const obx_int.IdUid(1, 4705057230903571781)),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(3, 1159915213455896323),
+            name: 'embedding',
+            type: 28,
+            flags: 8,
+            indexId: const obx_int.IdUid(2, 867283235448429078),
+            hnswParams: obx_int.ModelHnswParams(
+              dimensions: 384,
+            ))
       ],
       relations: <obx_int.ModelRelation>[],
       backlinks: <obx_int.ModelBacklink>[])
@@ -85,8 +85,8 @@ Future<obx.Store> openStore(
 obx_int.ModelDefinition getObjectBoxModel() {
   final model = obx_int.ModelInfo(
       entities: _entities,
-      lastEntityId: const obx_int.IdUid(1, 5911036239171600757),
-      lastIndexId: const obx_int.IdUid(2, 4035030762124604165),
+      lastEntityId: const obx_int.IdUid(1, 2499077018741701598),
+      lastIndexId: const obx_int.IdUid(2, 867283235448429078),
       lastRelationId: const obx_int.IdUid(0, 0),
       lastSequenceId: const obx_int.IdUid(0, 0),
       retiredEntityUids: const [],
@@ -107,14 +107,14 @@ obx_int.ModelDefinition getObjectBoxModel() {
           object.id = id;
         },
         objectToFB: (InternalDoc object, fb.Builder fbb) {
+          final uidOffset = fbb.writeString(object.uid);
           final embeddingOffset = object.embedding == null
               ? null
               : fbb.writeListFloat32(object.embedding!);
-          final uidOffset = fbb.writeString(object.uid);
           fbb.startTable(4);
           fbb.addInt64(0, object.id);
-          fbb.addOffset(1, embeddingOffset);
-          fbb.addOffset(2, uidOffset);
+          fbb.addOffset(1, uidOffset);
+          fbb.addOffset(2, embeddingOffset);
           fbb.finish(fbb.endTable());
           return object.id;
         },
@@ -122,10 +122,10 @@ obx_int.ModelDefinition getObjectBoxModel() {
           final buffer = fb.BufferContext(fbData);
           final rootOffset = buffer.derefObject(0);
           final uidParam = const fb.StringReader(asciiOptimization: true)
-              .vTableGet(buffer, rootOffset, 8, '');
+              .vTableGet(buffer, rootOffset, 6, '');
           final embeddingParam =
               const fb.ListReader<double>(fb.Float32Reader(), lazy: false)
-                  .vTableGetNullable(buffer, rootOffset, 6);
+                  .vTableGetNullable(buffer, rootOffset, 8);
           final object = InternalDoc(uidParam, embeddingParam)
             ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0);
 
@@ -142,11 +142,11 @@ class InternalDoc_ {
   static final id =
       obx.QueryIntegerProperty<InternalDoc>(_entities[0].properties[0]);
 
-  /// See [InternalDoc.embedding].
-  static final embedding =
-      obx.QueryHnswProperty<InternalDoc>(_entities[0].properties[1]);
-
   /// See [InternalDoc.uid].
   static final uid =
-      obx.QueryStringProperty<InternalDoc>(_entities[0].properties[2]);
+      obx.QueryStringProperty<InternalDoc>(_entities[0].properties[1]);
+
+  /// See [InternalDoc.embedding].
+  static final embedding =
+      obx.QueryHnswProperty<InternalDoc>(_entities[0].properties[2]);
 }

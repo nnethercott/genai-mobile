@@ -15,6 +15,7 @@ abstract class DocumentsRepository {
   Future<void> updateDocument(Document document);
   Future<void> deleteDocument(Document document);
   Future<Document?> getDocument(String id);
-  Future<List<Document>> getDocuments();
+  Future<List<Document>> getAllDocuments();
+  Future<List<Document>> getRelevantDocuments(String prompt, [int n = 5]);
   Future<List<Document>> getDocumentsByType(DocumentType type);
 }

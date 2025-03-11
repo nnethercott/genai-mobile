@@ -21,7 +21,7 @@ class ChatCubit extends Cubit<ChatState> {
     try {
       emit(ChatLoading());
       // get documents from content
-      List<Document> documents = await DocumentsRepository.instance.getDocuments();
+      List<Document> documents = await DocumentsRepository.instance.getAllDocuments();
 
       String content = documents.map((e) => e.content).join('\n');
       // Save the prompt to history
