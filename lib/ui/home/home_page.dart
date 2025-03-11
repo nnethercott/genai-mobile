@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:genai_mobile/providers/theme_provider.dart';
 import 'package:genai_mobile/ui/documents/drawer.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -66,22 +68,48 @@ class _HomePageState extends State<HomePage> {
           Navigator.pop(context);
         },
         onPickFile: () async {
+          try {
+            FilePickerResult? result = await FilePicker.platform.pickFiles();
+            if (result != null) {
+              File file = File(result.files.single.path!);
+              // TODO use cubit
+            }
+          } catch (e) {
+            print('Error picking file: $e');
+          }
           // Implement file picking logic
         },
         onTakePicture: () async {
-          // Implement picture taking logic
+          try {
+            final ImagePicker picker = ImagePicker();
+            final XFile? photo = await picker.pickImage(source: ImageSource.camera);
+            if (photo != null) {
+              File file = File(photo.path);
+              // TODO use cubit
+            }
+          } catch (e) {
+            print('Error taking picture: $e');
+          }
         },
         onPickImage: () async {
-          // Implement image picking logic
+          try {
+            final ImagePicker picker = ImagePicker();
+            final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+            if (image != null) {
+              File file = File(image.path);
+              // TODO use cubit
+            }
+          } catch (e) {
+            print('Error picking image: $e');
+          }
         },
       ),
       body: Column(
         children: [
           Expanded(
-            child:
-                _messages.isEmpty
-                    ? const Center(child: Text('Send a message or upload a document to begin', style: TextStyle(color: Colors.grey, fontSize: 16)))
-                    : ListView.builder(reverse: true, itemCount: _messages.length, itemBuilder: (context, index) => _messages[index]),
+            child: _messages.isEmpty
+                ? const Center(child: Text('Send a message or upload a document to begin', style: TextStyle(color: Colors.grey, fontSize: 16)))
+                : ListView.builder(reverse: true, itemCount: _messages.length, itemBuilder: (context, index) => _messages[index]),
           ),
           const Divider(height: 1),
           if (_isLoading) const LinearProgressIndicator(),
@@ -179,3 +207,48 @@ class ChatMessage extends StatelessWidget {
     );
   }
 }
+
+/*
+
+
+  Future<void> _pickFileFromDevice() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles();
+      if (result != null) {
+        File file = File(result.files.single.path!);
+        onDocumentSelected(file);
+      }
+    } catch (e) {
+      print('Error picking file: $e');
+    }
+  }
+
+  Future<void> _takePicture() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? photo = await picker.pickImage(source: ImageSource.camera);
+      if (photo != null) {
+        File file = File(photo.path);
+        onDocumentSelected(file);
+      }
+    } catch (e) {
+      print('Error taking picture: $e');
+    }
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        File file = File(image.path);
+        onDocumentSelected(file);
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+    }
+  }
+
+
+
+*/
