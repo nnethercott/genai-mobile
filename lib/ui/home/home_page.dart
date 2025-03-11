@@ -3,7 +3,7 @@ import 'package:genai_mobile/ui/documents/drawer.dart';
 import 'dart:io';
 
 import 'package:provider/provider.dart';
-import 'package:genai_mobile/providers/theme_provider.dart';  
+import 'package:genai_mobile/providers/theme_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -51,13 +51,12 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ChatGPT App'),
         elevation: 1,
         actions: [
           IconButton(
             icon: Icon(
-              context.watch<ThemeProvider>().isDarkMode 
-                ? Icons.light_mode 
+              context.watch<ThemeProvider>().isDarkMode
+                ? Icons.light_mode
                 : Icons.dark_mode,
             ),
             onPressed: () {
