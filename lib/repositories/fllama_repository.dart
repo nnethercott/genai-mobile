@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fllama/fllama.dart';
 import 'package:genai_mobile/models/Inference_response.dart';
 
@@ -19,7 +21,7 @@ class FllamaRepository {
   String? _mmprojPath;
   final _temperature = 0.5;
   final _topP = 1.0;
-  final int _maxTokens = 100;
+  final int _maxTokens = 2000;
 
   ToolFunction? _tool;
 
@@ -37,7 +39,7 @@ class FllamaRepository {
     this._tool,
   );
 
-  Future<InferenceResponse> runInference(String prompt) async {
+  Future<InferenceResponse> runInference(String prompt, List<String> allResponses) async {
     final request = OpenAiRequest(
       tools: [
         if (_tool != null)
@@ -72,11 +74,20 @@ class FllamaRepository {
     List<String> allResponses = [];
     String latestResultJson = '';
     String latestResultString = '';
+
+    final completer = Completer<void>();
+
     int requestId = await fllamaChat(request, (response, responseJson, done) {
       allResponses.add(responseJson);
       latestResultString = response;
       latestResultJson = responseJson;
+      if (done) {
+        completer.complete();
+      }
     });
+
+    await completer.future;
+
     return InferenceResponse(
       requestId: requestId,
       latestResultString: latestResultString,
