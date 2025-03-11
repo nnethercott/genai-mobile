@@ -7,6 +7,7 @@ import 'package:genai_mobile/dao/hive_adapters.dart';
 
 extension HiveRegistrar on HiveInterface {
   void registerAdapters() {
+    registerAdapter(DocumentAdapter());
     registerAdapter(PromptAdapter());
   }
 }

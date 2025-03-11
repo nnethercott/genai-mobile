@@ -1,4 +1,4 @@
-import 'package:genai_mobile/model/prompt.dart';
+import 'package:genai_mobile/models/prompt.dart';
 import 'package:hive_ce/hive.dart';
 
 class PromptRepository {

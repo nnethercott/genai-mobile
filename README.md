@@ -1,16 +1,37 @@
 # genai_mobile
 
-A new Flutter project.
+## Add model to hive
 
-## Getting Started
+create a model file in lib/models/
 
-This project is a starting point for a Flutter application.
+```dart
+import 'package:hive-ce/hive.dart';
 
-A few resources to get you started if this is your first Flutter project:
+class Document extends HiveObject {
+  String id;
+}
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Add new model to hive
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```dart
+import 'package:genai_mobile/models/document.dart';
+import 'package:genai_mobile/models/prompt.dart';
+import 'package:hive_ce/hive.dart';
+
+part 'hive_adapters.g.dart';
+
+@GenerateAdapters([
+  AdapterSpec<Prompt>(),
+  AdapterSpec<Document>(),
+])
+// Annotations must be on some element
+// ignore: unused_element
+void _() {}
+```
+
+Run this command to generate the necessary files:
+
+```dart
+dart pub run build_runner build
+```
