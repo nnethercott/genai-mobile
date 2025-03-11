@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fllama/fllama.dart';
 import 'package:genai_mobile/models/Inference_response.dart';
 
@@ -72,12 +74,20 @@ class FllamaRepository {
     List<String> allResponses = [];
     String latestResultJson = '';
     String latestResultString = '';
+
+    final completer = Completer<void>();
+
     int requestId = await fllamaChat(request, (response, responseJson, done) {
       allResponses.add(responseJson);
       latestResultString = response;
       latestResultJson = responseJson;
-      print('latestResultString: $latestResultString');
+      if (done) {
+        completer.complete();
+      }
     });
+
+    await completer.future;
+
     return InferenceResponse(
       requestId: requestId,
       latestResultString: latestResultString,
