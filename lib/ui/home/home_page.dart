@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:genai_mobile/ui/documents/drawer.dart';
 import 'dart:io';
-import 'package:file_picker/file_picker.dart';
-import 'package:image_picker/image_picker.dart';
+
 import 'package:provider/provider.dart';
-import 'package:genai_mobile/providers/theme_provider.dart';
+import 'package:genai_mobile/providers/theme_provider.dart';  
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -67,18 +67,25 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      drawer: DocumentUploadDrawer(
+      drawer: DocumentsDrawer(
         onDocumentSelected: (file) {
-          if (file != null) {
-            setState(() {
-              _messages.insert(0, ChatMessage(
-                text: "Uploaded: ${file.path.split('/').last}",
-                isUserMessage: true,
-                file: file,
-              ));
-            });
-            Navigator.pop(context);
-          }
+          setState(() {
+            _messages.insert(0, ChatMessage(
+              text: "Uploaded: ${file.path.split('/').last}",
+              isUserMessage: true,
+              file: file,
+            ));
+          });
+          Navigator.pop(context);
+                },
+        onPickFile: () async {
+          // Implement file picking logic
+        },
+        onTakePicture: () async {
+          // Implement picture taking logic
+        },
+        onPickImage: () async {
+          // Implement image picking logic
         },
       ),
       body: Column(
@@ -223,99 +230,6 @@ class ChatMessage extends StatelessWidget {
               backgroundColor: Colors.blue,
               child: const Text('You'),
             ),
-        ],
-      ),
-    );
-  }
-}
-
-class DocumentUploadDrawer extends StatelessWidget {
-  final Function(File?) onDocumentSelected;
-
-  const DocumentUploadDrawer({
-    Key? key,
-    required this.onDocumentSelected,
-  }) : super(key: key);
-
-  Future<void> _pickFileFromDevice() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles();
-      if (result != null) {
-        File file = File(result.files.single.path!);
-        onDocumentSelected(file);
-      }
-    } catch (e) {
-      print('Error picking file: $e');
-    }
-  }
-
-  Future<void> _takePicture() async {
-    try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? photo = await picker.pickImage(source: ImageSource.camera);
-      if (photo != null) {
-        File file = File(photo.path);
-        onDocumentSelected(file);
-      }
-    } catch (e) {
-      print('Error taking picture: $e');
-    }
-  }
-
-  Future<void> _pickImage() async {
-    try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        File file = File(image.path);
-        onDocumentSelected(file);
-      }
-    } catch (e) {
-      print('Error picking image: $e');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Drawer(
-      child: Column(
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.blue,
-            ),
-            child: const Center(
-              child: Text(
-                'Upload Document',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.file_present),
-                  title: const Text('Upload file'),
-                  onTap: _pickFileFromDevice,
-                ),
-                ListTile(
-                  leading: const Icon(Icons.photo_library),
-                  title: const Text('Choose from gallery'),
-                  onTap: _pickImage,
-                ),
-                ListTile(
-                  leading: const Icon(Icons.camera_alt),
-                  title: const Text('Take a picture'),
-                  onTap: _takePicture,
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

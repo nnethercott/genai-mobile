@@ -1,0 +1,30 @@
+{
+  "dart.debugExternalPackageLibraries": false,
+  "dart.debugSdkLibraries": false,
+  "dart.lineLength": 150,
+  "[dart]": {
+      "editor.codeActionsOnSave": {
+          "source.organizeImports": "always",
+          "source.fixAll": "always",
+          "source.quickFix": "always",
+      },
+      "editor.formatOnSave": true,
+      "editor.rulers": [
+          150
+      ],
+      // disable built-in highlighting and use Dart's ability to highlight only exact references
+      "editor.selectionHighlight": false
+  },
+  // always switch to debugging console when starting a debug session
+  "debug.internalConsoleOptions": "openOnSessionStart",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "markdownlint.config": {
+    "default": true,
+    "MD041": false,
+    "no-hard-tabs": true
+  },
+  "dart.devToolsBrowser": "default",
+  "lldb.library": "/Applications/Xcode.app/Contents/SharedFrameworks/LLDB.framework/Versions/A/LLDB",
+  "lldb.launch.expressions": "native"
+}

@@ -1,12 +1,20 @@
-
 import 'package:genai_mobile/models/document.dart';
 import 'package:genai_mobile/models/document_type.dart';
+import 'package:genai_mobile/repositories/document_repository_impl.dart';
 
 abstract class DocumentsRepository {
-  Future<void> addDocument(Document document) ;
-  Future<void> updateDocument(Document document) ;
-  Future<void> deleteDocument(Document document) ;
-  Future<Document> getDocument(String id) ;
-  Future<List<Document>> getDocuments() ;
-  Future<List<Document>> getDocumentsByType(DocumentType type) ;
+  DocumentsRepository._();
+    static DocumentsRepository? _instance;
+  
+  static DocumentsRepository get instance {
+    _instance ??= DocumentRepositoryImpl();
+    return _instance!;
+  }
+  
+  Future<void> addDocument(Document document);
+  Future<void> updateDocument(Document document);
+  Future<void> deleteDocument(Document document);
+  Future<Document?> getDocument(String id);
+  Future<List<Document>> getDocuments();
+  Future<List<Document>> getDocumentsByType(DocumentType type);
 }
