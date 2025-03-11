@@ -66,8 +66,7 @@ class ChatCubit extends Cubit<ChatState> {
 
       final response = await _fllamaRepository.runInference(
         prompt.prompt,
-        // pastMessages.sublist(0, min(10, pastMessages.length)) // send pas 4 exchanges
-        []
+        pastMessages,
       );
       final aiMessage = await chatMessagesRepository.addMessage(text: response.latestResultString, isUserMessage: false);
       emit(state.copyWith(
