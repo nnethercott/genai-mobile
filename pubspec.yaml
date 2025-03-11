@@ -47,7 +47,7 @@ dependencies:
       url: git@github.com:Telosnex/fonnx.git
   objectbox: ^4.1.0
   objectbox_flutter_libs: any
-  path: ^1.9.1
+  path: ^1.9.0
   syncfusion_flutter_pdf: ^28.2.11
   uuid: ^4.5.1
 

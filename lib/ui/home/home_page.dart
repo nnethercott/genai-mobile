@@ -19,8 +19,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController _textController = TextEditingController();
-  final List<ChatMessage> _messages = [];
-  bool _isLoading = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -33,50 +31,30 @@ class _HomePageState extends State<HomePage> {
     _textController.clear();
     if (text.trim().isEmpty) return;
 
-    setState(() {
-      _messages.insert(0, ChatMessage(text: text, isUserMessage: true));
-    });
-
     // Use ChatCubit to send message
     context.read<ChatCubit>().sendMessage(text);
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ChatCubit, ChatState>(
-      listener: (context, state) {
-        if (state is ChatLoading) {
-          setState(() => _isLoading = true);
-        } else {
-          setState(() => _isLoading = false);
-
-          if (state is ChatSuccess) {
-            setState(() {
-              _messages.insert(
-                  0,
-                  ChatMessage(
-                    text: state.response,
-                    isUserMessage: false,
-                  ));
-            });
-          } else if (state is ChatError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: ${state.message}')),
-            );
-          }
-        }
-      },
-      child: BlocBuilder<DocumentsCubit, DocumentsState>(
-        builder: (context, state) {
-          if (state is DocumentsLoading) {
+    return BlocConsumer<ChatCubit, ChatState>(listener: (context, state) {
+      if (state.status == ChatStatus.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${state.error}')),
+        );
+      }
+    }, builder: (context, chatState) {
+      return BlocBuilder<DocumentsCubit, DocumentsState>(
+        builder: (context, documentsState) {
+          if (documentsState is DocumentsLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state is DocumentsError) {
-            return Center(child: Text('Error: ${state.message}'));
+          if (documentsState is DocumentsError) {
+            return Center(child: Text('Error: ${documentsState.message}'));
           }
 
-          if (state is DocumentsLoaded) {
+          if (documentsState is DocumentsLoaded) {
             return Scaffold(
               key: _scaffoldKey,
               appBar: AppBar(
@@ -92,12 +70,12 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               drawer: DocumentsDrawer(
-                documents: state.documents,
+                documents: documentsState.documents,
                 onDocumentSelected: (document) {
-                  setState(() {
-                    _messages.insert(
-                        0, ChatMessage(text: "Selected: ${document.title}", isUserMessage: true, file: File(document.contentPath ?? '')));
-                  });
+                  // setState(() {
+                  //   _messages.insert(
+                  //       0, ChatMessage(text: "Selected: ${document.title}", isUserMessage: true, file: File(document.contentPath ?? '')));
+                  // });
                   Navigator.pop(context);
                 },
                 onDocumentDelete: (document) {
@@ -151,17 +129,27 @@ class _HomePageState extends State<HomePage> {
               body: Column(
                 children: [
                   Expanded(
-                    child: _messages.isEmpty
+                    child: chatState.messages.isEmpty
                         ? const Center(
                             child: Text('Send a message or upload a document to begin', style: TextStyle(color: Colors.grey, fontSize: 16)))
-                        : ListView.builder(reverse: true, itemCount: _messages.length, itemBuilder: (context, index) => _messages[index]),
+                        : ListView.builder(
+                            reverse: true,
+                            itemCount: chatState.messages.length,
+                            itemBuilder: (context, index) =>
+                                ChatMessage(text: chatState.messages[index].text, isUserMessage: chatState.messages[index].isUser)),
                   ),
                   const Divider(height: 1),
-                  if (_isLoading) const LinearProgressIndicator(),
+                  if (chatState.status == ChatStatus.loading)
+                    LinearProgressIndicator(
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                    ),
                   Container(decoration: BoxDecoration(color: Theme.of(context).cardColor), child: _buildTextComposer()),
                 ],
               ),
               floatingActionButton: FloatingActionButton(
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
                 onPressed: () {
                   _scaffoldKey.currentState?.openDrawer();
                 },
@@ -172,8 +160,8 @@ class _HomePageState extends State<HomePage> {
 
           return const Center(child: Text('No data available'));
         },
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildTextComposer() {
@@ -221,26 +209,46 @@ class ChatMessage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: isUserMessage ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
-          if (!isUserMessage) CircleAvatar(backgroundColor: Colors.blue[300], child: const Text('AI')),
+          if (!isUserMessage)
+            CircleAvatar(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: Text(
+                'AI',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ),
           const SizedBox(width: 8),
           Flexible(
             child: Container(
               padding: const EdgeInsets.all(12.0),
-              decoration: BoxDecoration(color: isUserMessage ? Colors.blue[100] : Colors.grey[200], borderRadius: BorderRadius.circular(12.0)),
+              decoration: BoxDecoration(
+                  color: isUserMessage ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(12.0)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(text),
+                  Text(
+                    text,
+                    style: TextStyle(
+                      color: isUserMessage ? Theme.of(context).colorScheme.onPrimaryContainer : Theme.of(context).colorScheme.onSecondaryContainer,
+                    ),
+                  ),
                   if (file != null) ...[
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(Icons.attach_file, size: 16, color: Colors.grey[600]),
+                        Icon(
+                          Icons.attach_file,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             file!.path.split('/').last,
-                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -252,7 +260,16 @@ class ChatMessage extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          if (isUserMessage) CircleAvatar(backgroundColor: Colors.blue, child: const Text('You')),
+          if (isUserMessage)
+            CircleAvatar(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: Text(
+                'You',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ),
         ],
       ),
     );

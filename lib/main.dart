@@ -38,7 +38,7 @@ Future<void> main() async {
           create: (context) => ChatCubit(
             fllamaRepository: fllamaRepository,
             promptRepository: promptRepository,
-          ),
+          )..loadMessages(),
         ),
         ChangeNotifierProvider(
           create: (_) => ThemeProvider(),
