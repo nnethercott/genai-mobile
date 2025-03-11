@@ -179,6 +179,11 @@ class DocumentsDrawer extends StatelessWidget {
 
   void _showZipUrlInputDialog(BuildContext context) {
     final TextEditingController urlController = TextEditingController();
+    final Map<String, String> predefinedUrls = {
+      'Travel in Mauritus': 'https://example.com/sample-docs.zip',
+      'Repairing stuff': 'https://example.com/user-guide.zip',
+      'Rust and flutter': 'https://example.com/api-docs.zip',
+    };
 
     showDialog(
       context: context,
@@ -197,6 +202,21 @@ class DocumentsDrawer extends StatelessWidget {
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.url,
+            ),
+            const SizedBox(height: 16),
+            const Text('Or select from predefined URLs:'),
+            const SizedBox(height: 8),
+            ...predefinedUrls.entries.map(
+              (entry) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    onImportZipFromUrl(entry.value);
+                  },
+                  child: Text(entry.key),
+                ),
+              ),
             ),
           ],
         ),
