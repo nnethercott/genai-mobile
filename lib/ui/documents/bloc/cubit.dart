@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genai_mobile/models/document.dart';
 import 'package:genai_mobile/models/document_type.dart';
@@ -46,9 +48,10 @@ class DocumentsCubit extends Cubit<DocumentsState> {
     }
   }
 
-  Future<void> addDocument(Document document) async {
+  Future<void> addDocument(File file) async {
     try {
       emit(DocumentsLoading());
+      Document document = await documentFromPdf(file.path , DocumentType.documentation);
       await _repository.addDocument(document);
       final documents = await _repository.getDocuments();
       emit(DocumentsLoaded(documents));

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:genai_mobile/providers/theme_provider.dart';
+import 'package:genai_mobile/ui/documents/bloc/cubit.dart';
 import 'package:genai_mobile/ui/documents/drawer.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -72,7 +73,7 @@ class _HomePageState extends State<HomePage> {
             FilePickerResult? result = await FilePicker.platform.pickFiles();
             if (result != null) {
               File file = File(result.files.single.path!);
-              // TODO use cubit
+              context.read<DocumentsCubit>().addDocument(file);
             }
           } catch (e) {
             print('Error picking file: $e');
@@ -85,7 +86,8 @@ class _HomePageState extends State<HomePage> {
             final XFile? photo = await picker.pickImage(source: ImageSource.camera);
             if (photo != null) {
               File file = File(photo.path);
-              // TODO use cubit
+              print('Photo picked: ${file.path}');
+
             }
           } catch (e) {
             print('Error taking picture: $e');
