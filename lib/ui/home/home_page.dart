@@ -78,6 +78,20 @@ class _HomePageState extends State<HomePage> {
                   // });
                   Navigator.pop(context);
                 },
+                onImportZipFromUrl: (url) async {
+                  try {
+                    final documents = await ZipImportService.importZipFromUrl(url);
+                    if (!mounted) return;
+
+                    for (var document in documents) {
+                      if (document.contentPath != null) {
+                        context.read<DocumentsCubit>().addDocument(document.contentPath!);
+                      }
+                    }
+                  } catch (e) {
+                    print('Error picking file: $e');
+                  }
+                },
                 onDocumentDelete: (document) {
                   context.read<DocumentsCubit>().deleteDocument(document);
                 },

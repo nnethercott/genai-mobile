@@ -1,25 +1,75 @@
+import 'dart:io';
+
+import 'package:archive/archive.dart';
 import 'package:flutter/material.dart';
 import 'package:genai_mobile/models/document.dart';
+import 'package:genai_mobile/models/document_type.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 
-class SectionHeader extends StatelessWidget {
-  final String title;
+class ZipImportService {
+  /// Imports a ZIP file from a URL and extracts all PDF files from it
+  static Future<List<Document>> importZipFromUrl(String url) async {
+    try {
+      // Download the ZIP file like wget
+      final client = http.Client();
+      final request = http.Request('GET', Uri.parse(url));
+      final response = await client.send(request);
 
-  const SectionHeader({super.key, required this.title});
+      if (response.statusCode != 200) {
+        throw Exception('Failed to download ZIP file: ${response.statusCode}');
+      }
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Text(title, style: Theme.of(context).textTheme.titleMedium),
-    );
+      final bytes = await response.stream.toBytes();
+
+      // Decode the ZIP archive from the response bytes
+      final archive = ZipDecoder().decodeBytes(bytes);
+
+      // Get the application documents directory to save extracted files
+      final appDocDir = await getApplicationDocumentsDirectory();
+      final extractionDir = Directory('${appDocDir.path}/extracted_zip_${DateTime.now().millisecondsSinceEpoch}');
+      await extractionDir.create(recursive: true);
+
+      Set<Document> extractedDocuments = {};
+
+      // Extract only PDF files
+      for (var file in archive) {
+        if (file.isFile && path.extension(file.name).toLowerCase() == '.pdf') {
+          try {
+            final fileName = path.basename(file.name);
+            final filePath = '${extractionDir.path}/$fileName';
+
+            // Extract and save the file
+            final outputFile = File(filePath);
+            await outputFile.writeAsBytes(file.content as List<int>);
+
+            // Create a Document object for each extracted PDF
+            final document = await documentFromPdf(filePath, DocumentType.book);
+            extractedDocuments.add(document);
+            print('Successfully processed file: $fileName');
+          } catch (e) {
+            print('Error processing file ${file.name}: $e');
+            // Continue processing other documents
+          }
+        }
+      }
+
+      return extractedDocuments.toList();
+    } catch (e) {
+      print('Error importing ZIP from URL: $e');
+      rethrow;
+    }
   }
 }
 
+// Updated DocumentsDrawer with ZIP import functionality
 class DocumentsDrawer extends StatelessWidget {
   final List<Document> documents;
   final Future<void> Function() onPickFile;
   final Future<void> Function() onTakePicture;
   final Future<void> Function() onPickImage;
+  final Future<void> Function(String) onImportZipFromUrl;
   final Function(Document) onDocumentSelected;
   final Function(Document) onDocumentDelete;
 
@@ -29,6 +79,7 @@ class DocumentsDrawer extends StatelessWidget {
     required this.onPickFile,
     required this.onTakePicture,
     required this.onPickImage,
+    required this.onImportZipFromUrl,
     required this.onDocumentSelected,
     required this.onDocumentDelete,
   });
@@ -96,14 +147,73 @@ class DocumentsDrawer extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: FloatingActionButton.extended(
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-              foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
-              onPressed: onPickFile,
-              label: const Text('Upload file'),
-              icon: const Icon(Icons.file_upload),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton.extended(
+                  heroTag: 'upload_file',
+                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                  onPressed: onPickFile,
+                  label: const Text('Upload file'),
+                  icon: const Icon(Icons.file_upload),
+                ),
+                const SizedBox(height: 12),
+                FloatingActionButton.extended(
+                  heroTag: 'import_zip',
+                  backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                  foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
+                  onPressed: () => _showZipUrlInputDialog(context),
+                  label: const Text('Import ZIP from URL'),
+                  icon: const Icon(Icons.archive),
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showZipUrlInputDialog(BuildContext context) {
+    final TextEditingController urlController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Import ZIP from URL'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter the URL of the ZIP file containing PDFs:'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: urlController,
+              decoration: const InputDecoration(
+                labelText: 'ZIP URL',
+                hintText: 'https://example.com/documents.zip',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.url,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final url = urlController.text.trim();
+              if (url.isNotEmpty) {
+                Navigator.pop(context);
+                onImportZipFromUrl(url);
+              }
+            },
+            child: const Text('Import'),
           ),
         ],
       ),
