@@ -22,7 +22,7 @@ final _entities = <obx_int.ModelEntity>[
   obx_int.ModelEntity(
       id: const obx_int.IdUid(1, 5911036239171600757),
       name: 'InternalDoc',
-      lastPropertyId: const obx_int.IdUid(3, 6976224411362482952),
+      lastPropertyId: const obx_int.IdUid(3, 8668920910156642289),
       flags: 0,
       properties: <obx_int.ModelProperty>[
         obx_int.ModelProperty(
@@ -40,10 +40,11 @@ final _entities = <obx_int.ModelEntity>[
               dimensions: 384,
             )),
         obx_int.ModelProperty(
-            id: const obx_int.IdUid(3, 6976224411362482952),
+            id: const obx_int.IdUid(3, 8668920910156642289),
             name: 'uid',
             type: 9,
-            flags: 0)
+            flags: 2048,
+            indexId: const obx_int.IdUid(2, 4035030762124604165))
       ],
       relations: <obx_int.ModelRelation>[],
       backlinks: <obx_int.ModelBacklink>[])
@@ -85,7 +86,7 @@ obx_int.ModelDefinition getObjectBoxModel() {
   final model = obx_int.ModelInfo(
       entities: _entities,
       lastEntityId: const obx_int.IdUid(1, 5911036239171600757),
-      lastIndexId: const obx_int.IdUid(1, 943994291960045020),
+      lastIndexId: const obx_int.IdUid(2, 4035030762124604165),
       lastRelationId: const obx_int.IdUid(0, 0),
       lastSequenceId: const obx_int.IdUid(0, 0),
       retiredEntityUids: const [],

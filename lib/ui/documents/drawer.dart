@@ -40,13 +40,13 @@ class DocumentsDrawer extends StatelessWidget {
         children: [
           DrawerHeader(
             decoration: BoxDecoration(
-              color: Colors.blue,
+              color: Theme.of(context).colorScheme.primaryContainer,
             ),
-            child: const Center(
+            child: Center(
               child: Text(
                 'Documents',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
                   fontSize: 24,
                 ),
               ),
@@ -57,10 +57,16 @@ class DocumentsDrawer extends StatelessWidget {
               padding: EdgeInsets.zero,
               children: [
                 ...documents.map((document) => ListTile(
-                      leading: const Icon(Icons.file_present),
+                      leading: Icon(
+                        Icons.file_present,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                       title: Text(document.title),
                       trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
+                        icon: Icon(
+                          Icons.delete,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                         onPressed: () {
                           showDialog(
                             context: context,
@@ -92,6 +98,8 @@ class DocumentsDrawer extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: FloatingActionButton.extended(
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
               onPressed: onPickFile,
               label: const Text('Upload file'),
               icon: const Icon(Icons.file_upload),

@@ -139,11 +139,17 @@ class _HomePageState extends State<HomePage> {
                                 ChatMessage(text: chatState.messages[index].text, isUserMessage: chatState.messages[index].isUser)),
                   ),
                   const Divider(height: 1),
-                  if (chatState.status == ChatStatus.loading) const LinearProgressIndicator(),
+                  if (chatState.status == ChatStatus.loading)
+                    LinearProgressIndicator(
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                    ),
                   Container(decoration: BoxDecoration(color: Theme.of(context).cardColor), child: _buildTextComposer()),
                 ],
               ),
               floatingActionButton: FloatingActionButton(
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
                 onPressed: () {
                   _scaffoldKey.currentState?.openDrawer();
                 },
@@ -203,26 +209,46 @@ class ChatMessage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: isUserMessage ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
-          if (!isUserMessage) CircleAvatar(backgroundColor: Colors.blue[300], child: const Text('AI')),
+          if (!isUserMessage)
+            CircleAvatar(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: Text(
+                'AI',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ),
           const SizedBox(width: 8),
           Flexible(
             child: Container(
               padding: const EdgeInsets.all(12.0),
-              decoration: BoxDecoration(color: isUserMessage ? Colors.blue[100] : Colors.grey[200], borderRadius: BorderRadius.circular(12.0)),
+              decoration: BoxDecoration(
+                  color: isUserMessage ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(12.0)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(text),
+                  Text(
+                    text,
+                    style: TextStyle(
+                      color: isUserMessage ? Theme.of(context).colorScheme.onPrimaryContainer : Theme.of(context).colorScheme.onSecondaryContainer,
+                    ),
+                  ),
                   if (file != null) ...[
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(Icons.attach_file, size: 16, color: Colors.grey[600]),
+                        Icon(
+                          Icons.attach_file,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             file!.path.split('/').last,
-                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -234,7 +260,16 @@ class ChatMessage extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          if (isUserMessage) CircleAvatar(backgroundColor: Colors.blue, child: const Text('You')),
+          if (isUserMessage)
+            CircleAvatar(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: Text(
+                'You',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            ),
         ],
       ),
     );

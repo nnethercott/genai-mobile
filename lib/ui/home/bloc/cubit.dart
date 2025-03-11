@@ -30,7 +30,7 @@ class ChatCubit extends Cubit<ChatState> {
       List<Document> documents = await DocumentsRepository.instance.getDocuments();
       final ChatMessagesRepository chatMessagesRepository = ChatMessagesRepository.instance;
 
-      String content = documents.map((e) => e.content).join('\n');
+      String content = documents.map((e) => e.content).join('\n').substring(0, 4096);
       // Save the prompt to history
       final prompt = Prompt(
         '$message\n here some context: $content',
