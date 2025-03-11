@@ -1,4 +1,4 @@
-# hackathon
+# genai_mobile
 
 A new Flutter project.
 

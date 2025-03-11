@@ -1,6 +1,6 @@
 {
-    "name": "hackathon",
-    "short_name": "hackathon",
+    "name": "genai_mobile",
+    "short_name": "genai_mobile",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

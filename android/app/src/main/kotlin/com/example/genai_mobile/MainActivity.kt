@@ -1,4 +1,4 @@
-package com.example.hackathon
+package com.example.genai_mobile
 
 import io.flutter.embedding.android.FlutterActivity
 
