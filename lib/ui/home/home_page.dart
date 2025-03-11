@@ -76,16 +76,28 @@ class _HomePageState extends State<HomePage> {
               documents: state.documents,
               onDocumentSelected: (document) {
                 setState(() {
-                  _messages.insert(0, ChatMessage(text: "Selected: ${document.path}", isUserMessage: true, file: File(document.path)));
+                  _messages.insert(0, ChatMessage(text: "Selected: ${document.title}", isUserMessage: true, file: File(document.contentPath ?? '')));
                 });
                 Navigator.pop(context);
               },
+              onDocumentDelete: (document) {
+                context.read<DocumentsCubit>().deleteDocument(document);
+              },
               onPickFile: () async {
                 try {
-                  FilePickerResult? result = await FilePicker.platform.pickFiles();
+                  FilePickerResult? result = await FilePicker.platform.pickFiles(
+                    type: FileType.custom,
+                    allowedExtensions: ['pdf'],
+                  );
                   if (result != null) {
                     final path = result.files.single.path!;
-                    context.read<DocumentsCubit>().addDocument(path);
+                    if (path.toLowerCase().endsWith('.pdf')) {
+                      context.read<DocumentsCubit>().addDocument(path);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please select a PDF file')),
+                      );
+                    }
                   }
                 } catch (e) {
                   print('Error picking file: $e');
