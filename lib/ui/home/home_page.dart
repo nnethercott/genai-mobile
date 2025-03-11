@@ -19,8 +19,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController _textController = TextEditingController();
-  final List<ChatMessage> _messages = [];
-  bool _isLoading = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -33,50 +31,30 @@ class _HomePageState extends State<HomePage> {
     _textController.clear();
     if (text.trim().isEmpty) return;
 
-    setState(() {
-      _messages.insert(0, ChatMessage(text: text, isUserMessage: true));
-    });
-
     // Use ChatCubit to send message
     context.read<ChatCubit>().sendMessage(text);
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ChatCubit, ChatState>(
-      listener: (context, state) {
-        if (state is ChatLoading) {
-          setState(() => _isLoading = true);
-        } else {
-          setState(() => _isLoading = false);
-
-          if (state is ChatSuccess) {
-            setState(() {
-              _messages.insert(
-                  0,
-                  ChatMessage(
-                    text: state.response,
-                    isUserMessage: false,
-                  ));
-            });
-          } else if (state is ChatError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: ${state.message}')),
-            );
-          }
-        }
-      },
-      child: BlocBuilder<DocumentsCubit, DocumentsState>(
-        builder: (context, state) {
-          if (state is DocumentsLoading) {
+    return BlocConsumer<ChatCubit, ChatState>(listener: (context, state) {
+      if (state.status == ChatStatus.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${state.error}')),
+        );
+      }
+    }, builder: (context, chatState) {
+      return BlocBuilder<DocumentsCubit, DocumentsState>(
+        builder: (context, documentsState) {
+          if (documentsState is DocumentsLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state is DocumentsError) {
-            return Center(child: Text('Error: ${state.message}'));
+          if (documentsState is DocumentsError) {
+            return Center(child: Text('Error: ${documentsState.message}'));
           }
 
-          if (state is DocumentsLoaded) {
+          if (documentsState is DocumentsLoaded) {
             return Scaffold(
               key: _scaffoldKey,
               appBar: AppBar(
@@ -92,12 +70,12 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               drawer: DocumentsDrawer(
-                documents: state.documents,
+                documents: documentsState.documents,
                 onDocumentSelected: (document) {
-                  setState(() {
-                    _messages.insert(
-                        0, ChatMessage(text: "Selected: ${document.title}", isUserMessage: true, file: File(document.contentPath ?? '')));
-                  });
+                  // setState(() {
+                  //   _messages.insert(
+                  //       0, ChatMessage(text: "Selected: ${document.title}", isUserMessage: true, file: File(document.contentPath ?? '')));
+                  // });
                   Navigator.pop(context);
                 },
                 onDocumentDelete: (document) {
@@ -151,13 +129,17 @@ class _HomePageState extends State<HomePage> {
               body: Column(
                 children: [
                   Expanded(
-                    child: _messages.isEmpty
+                    child: chatState.messages.isEmpty
                         ? const Center(
                             child: Text('Send a message or upload a document to begin', style: TextStyle(color: Colors.grey, fontSize: 16)))
-                        : ListView.builder(reverse: true, itemCount: _messages.length, itemBuilder: (context, index) => _messages[index]),
+                        : ListView.builder(
+                            reverse: true,
+                            itemCount: chatState.messages.length,
+                            itemBuilder: (context, index) =>
+                                ChatMessage(text: chatState.messages[index].text, isUserMessage: chatState.messages[index].isUser)),
                   ),
                   const Divider(height: 1),
-                  if (_isLoading)
+                  if (chatState.status == ChatStatus.loading)
                     LinearProgressIndicator(
                       backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                       valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
@@ -178,8 +160,8 @@ class _HomePageState extends State<HomePage> {
 
           return const Center(child: Text('No data available'));
         },
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildTextComposer() {
