@@ -16,7 +16,9 @@ class PromptAdapter extends TypeAdapter<Prompt> {
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return Prompt(fields[0] as String);
+    return Prompt(
+      fields[0] as String,
+    );
   }
 
   @override
