@@ -1,12 +1,17 @@
-import 'package:flutter/material.dart';
-import 'package:genai_mobile/ui/documents/drawer.dart';
 import 'dart:io';
 
-import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genai_mobile/providers/theme_provider.dart';
+import 'package:genai_mobile/ui/documents/bloc/cubit.dart';
+import 'package:genai_mobile/ui/documents/drawer.dart';
+import 'package:genai_mobile/ui/home/bloc/cubit.dart';
+import 'package:genai_mobile/ui/home/bloc/state.dart';
+import 'package:image_picker/image_picker.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -16,6 +21,7 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _textController = TextEditingController();
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void dispose() {
@@ -28,98 +34,144 @@ class _HomePageState extends State<HomePage> {
     if (text.trim().isEmpty) return;
 
     setState(() {
-      _messages.insert(0, ChatMessage(
-        text: text,
-        isUserMessage: true,
-      ));
-      _isLoading = true;
+      _messages.insert(0, ChatMessage(text: text, isUserMessage: true));
     });
 
-    // Simulate response (replace with actual API call)
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        _isLoading = false;
-        _messages.insert(0, ChatMessage(
-          text: "This is a simulated response to: $text",
-          isUserMessage: false,
-        ));
-      });
-    });
+    // Use ChatCubit to send message
+    context.read<ChatCubit>().sendMessage(text);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 1,
-        actions: [
-          IconButton(
-            icon: Icon(
-              context.watch<ThemeProvider>().isDarkMode
-                ? Icons.light_mode
-                : Icons.dark_mode,
-            ),
-            onPressed: () {
-              context.read<ThemeProvider>().toggleTheme();
-            },
-            tooltip: 'Toggle theme',
-          ),
-        ],
-      ),
-      drawer: DocumentsDrawer(
-        onDocumentSelected: (file) {
-          setState(() {
-            _messages.insert(0, ChatMessage(
-              text: "Uploaded: ${file.path.split('/').last}",
-              isUserMessage: true,
-              file: file,
-            ));
-          });
-          Navigator.pop(context);
-                },
-        onPickFile: () async {
-          // Implement file picking logic
-        },
-        onTakePicture: () async {
-          // Implement picture taking logic
-        },
-        onPickImage: () async {
-          // Implement image picking logic
-        },
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _messages.isEmpty
-              ? const Center(
-                  child: Text(
-                    'Send a message or upload a document to begin',
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
+    return BlocListener<ChatCubit, ChatState>(
+      listener: (context, state) {
+        if (state is ChatLoading) {
+          setState(() => _isLoading = true);
+        } else {
+          setState(() => _isLoading = false);
+
+          if (state is ChatSuccess) {
+            setState(() {
+              _messages.insert(
+                  0,
+                  ChatMessage(
+                    text: state.response,
+                    isUserMessage: false,
+                  ));
+            });
+          } else if (state is ChatError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error: ${state.message}')),
+            );
+          }
+        }
+      },
+      child: BlocBuilder<DocumentsCubit, DocumentsState>(
+        builder: (context, state) {
+          if (state is DocumentsLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state is DocumentsError) {
+            return Center(child: Text('Error: ${state.message}'));
+          }
+
+          if (state is DocumentsLoaded) {
+            return Scaffold(
+              key: _scaffoldKey,
+              appBar: AppBar(
+                elevation: 1,
+                actions: [
+                  IconButton(
+                    icon: Icon(context.watch<ThemeProvider>().isDarkMode ? Icons.light_mode : Icons.dark_mode),
+                    onPressed: () {
+                      context.read<ThemeProvider>().toggleTheme();
+                    },
+                    tooltip: 'Toggle theme',
                   ),
-                )
-              : ListView.builder(
-                  reverse: true,
-                  itemCount: _messages.length,
-                  itemBuilder: (context, index) => _messages[index],
-                ),
-          ),
-          const Divider(height: 1),
-          if (_isLoading)
-            const LinearProgressIndicator(),
-          Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-            ),
-            child: _buildTextComposer(),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Scaffold.of(context).openDrawer();
+                ],
+              ),
+              drawer: DocumentsDrawer(
+                documents: state.documents,
+                onDocumentSelected: (document) {
+                  setState(() {
+                    _messages.insert(
+                        0, ChatMessage(text: "Selected: ${document.title}", isUserMessage: true, file: File(document.contentPath ?? '')));
+                  });
+                  Navigator.pop(context);
+                },
+                onDocumentDelete: (document) {
+                  context.read<DocumentsCubit>().deleteDocument(document);
+                },
+                onPickFile: () async {
+                  try {
+                    FilePickerResult? result = await FilePicker.platform.pickFiles(
+                      type: FileType.custom,
+                      allowedExtensions: ['pdf'],
+                    );
+                    if (result != null) {
+                      final path = result.files.single.path!;
+                      if (path.toLowerCase().endsWith('.pdf')) {
+                        context.read<DocumentsCubit>().addDocument(path);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please select a PDF file')),
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    print('Error picking file: $e');
+                  }
+                },
+                onTakePicture: () async {
+                  try {
+                    final ImagePicker picker = ImagePicker();
+                    final XFile? photo = await picker.pickImage(source: ImageSource.camera);
+                    if (photo != null) {
+                      File file = File(photo.path);
+                      print('Photo picked: ${file.path}');
+                    }
+                  } catch (e) {
+                    print('Error taking picture: $e');
+                  }
+                },
+                onPickImage: () async {
+                  try {
+                    final ImagePicker picker = ImagePicker();
+                    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+                    if (image != null) {
+                      File file = File(image.path);
+                      // TODO use cubit
+                    }
+                  } catch (e) {
+                    print('Error picking image: $e');
+                  }
+                },
+              ),
+              body: Column(
+                children: [
+                  Expanded(
+                    child: _messages.isEmpty
+                        ? const Center(
+                            child: Text('Send a message or upload a document to begin', style: TextStyle(color: Colors.grey, fontSize: 16)))
+                        : ListView.builder(reverse: true, itemCount: _messages.length, itemBuilder: (context, index) => _messages[index]),
+                  ),
+                  const Divider(height: 1),
+                  if (_isLoading) const LinearProgressIndicator(),
+                  Container(decoration: BoxDecoration(color: Theme.of(context).cardColor), child: _buildTextComposer()),
+                ],
+              ),
+              floatingActionButton: FloatingActionButton(
+                onPressed: () {
+                  _scaffoldKey.currentState?.openDrawer();
+                },
+                child: const Icon(Icons.attach_file),
+              ),
+            );
+          }
+
+          return const Center(child: Text('No data available'));
         },
-        child: const Icon(Icons.attach_file),
-        tooltip: 'Upload document',
       ),
     );
   }
@@ -138,19 +190,14 @@ class _HomePageState extends State<HomePage> {
                 onSubmitted: _handleSubmitted,
                 decoration: const InputDecoration(
                   hintText: 'Send a message',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(25.0))),
                   contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 ),
               ),
             ),
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: IconButton(
-                icon: const Icon(Icons.send),
-                onPressed: () => _handleSubmitted(_textController.text),
-              ),
+              child: IconButton(icon: const Icon(Icons.send), onPressed: () => _handleSubmitted(_textController.text)),
             ),
           ],
         ),
@@ -164,12 +211,7 @@ class ChatMessage extends StatelessWidget {
   final bool isUserMessage;
   final File? file;
 
-  const ChatMessage({
-    Key? key,
-    required this.text,
-    required this.isUserMessage,
-    this.file,
-  }) : super(key: key);
+  const ChatMessage({super.key, required this.text, required this.isUserMessage, this.file});
 
   @override
   Widget build(BuildContext context) {
@@ -179,19 +221,12 @@ class ChatMessage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: isUserMessage ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
-          if (!isUserMessage)
-            CircleAvatar(
-              backgroundColor: Colors.blue[300],
-              child: const Text('AI'),
-            ),
+          if (!isUserMessage) CircleAvatar(backgroundColor: Colors.blue[300], child: const Text('AI')),
           const SizedBox(width: 8),
           Flexible(
             child: Container(
               padding: const EdgeInsets.all(12.0),
-              decoration: BoxDecoration(
-                color: isUserMessage ? Colors.blue[100] : Colors.grey[200],
-                borderRadius: BorderRadius.circular(12.0),
-              ),
+              decoration: BoxDecoration(color: isUserMessage ? Colors.blue[100] : Colors.grey[200], borderRadius: BorderRadius.circular(12.0)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -200,19 +235,12 @@ class ChatMessage extends StatelessWidget {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(
-                          Icons.attach_file,
-                          size: 16,
-                          color: Colors.grey[600],
-                        ),
+                        Icon(Icons.attach_file, size: 16, color: Colors.grey[600]),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             file!.path.split('/').last,
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 12,
-                            ),
+                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -224,13 +252,54 @@ class ChatMessage extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          if (isUserMessage)
-            CircleAvatar(
-              backgroundColor: Colors.blue,
-              child: const Text('You'),
-            ),
+          if (isUserMessage) CircleAvatar(backgroundColor: Colors.blue, child: const Text('You')),
         ],
       ),
     );
   }
 }
+
+/*
+
+
+  Future<void> _pickFileFromDevice() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles();
+      if (result != null) {
+        File file = File(result.files.single.path!);
+        onDocumentSelected(file);
+      }
+    } catch (e) {
+      print('Error picking file: $e');
+    }
+  }
+
+  Future<void> _takePicture() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? photo = await picker.pickImage(source: ImageSource.camera);
+      if (photo != null) {
+        File file = File(photo.path);
+        onDocumentSelected(file);
+      }
+    } catch (e) {
+      print('Error taking picture: $e');
+    }
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        File file = File(image.path);
+        onDocumentSelected(file);
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+    }
+  }
+
+
+
+*/

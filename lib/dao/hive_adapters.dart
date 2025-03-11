@@ -8,6 +8,7 @@ part 'hive_adapters.g.dart';
 @GenerateAdapters([
   AdapterSpec<Prompt>(),
   AdapterSpec<Document>(),
+  AdapterSpec<DocumentType>(),
 ])
 // Annotations must be on some element
 // ignore: unused_element

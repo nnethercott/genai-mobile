@@ -21,6 +21,7 @@ version: 1.0.0+1
 environment:
   sdk: ^3.6.1
 
+
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
 # consider running `flutter pub upgrade --major-versions`. Alternatively,
@@ -47,6 +48,8 @@ dependencies:
   objectbox: ^4.1.0
   objectbox_flutter_libs: any
   path: ^1.9.1
+  syncfusion_flutter_pdf: ^28.2.11
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:

@@ -46,9 +46,10 @@ class DocumentsCubit extends Cubit<DocumentsState> {
     }
   }
 
-  Future<void> addDocument(Document document) async {
+  Future<void> addDocument(String path) async {
     try {
       emit(DocumentsLoading());
+      Document document = await documentFromPdf(path, DocumentType.documentation);
       await _repository.addDocument(document);
       final documents = await _repository.getDocuments();
       emit(DocumentsLoaded(documents));
