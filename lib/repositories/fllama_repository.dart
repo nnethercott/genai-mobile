@@ -39,7 +39,7 @@ class FllamaRepository {
     this._tool,
   );
 
-  Future<InferenceResponse> runInference(String prompt) async {
+  Future<InferenceResponse> runInference(String prompt, List<String> allResponses) async {
     final request = OpenAiRequest(
       tools: [
         if (_tool != null)

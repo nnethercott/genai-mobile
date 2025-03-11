@@ -30,6 +30,7 @@ migrate_working_dir/
 build/
 temp/
 test/inferences/assets
+assets/models/*
 *.so
 dev/
 .flutter-plugins*
