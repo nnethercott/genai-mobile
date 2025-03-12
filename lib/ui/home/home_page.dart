@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:genai_mobile/models/document.dart';
+import 'package:genai_mobile/providers/document_provider.dart';
 import 'package:genai_mobile/providers/theme_provider.dart';
 import 'package:genai_mobile/ui/documents/bloc/cubit.dart';
 import 'package:genai_mobile/ui/documents/drawer.dart';
@@ -27,12 +29,12 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  void _handleSubmitted(String text) {
+  void _handleSubmitted(String text, Document document) {
     _textController.clear();
     if (text.trim().isEmpty) return;
 
     // Use ChatCubit to send message
-    context.read<ChatCubit>().sendMessage(text);
+    context.read<ChatCubit>().sendMessage(text, document);
   }
 
   @override
@@ -191,7 +193,16 @@ class _HomePageState extends State<HomePage> {
                 Flexible(
                   child: TextField(
                     controller: _textController,
-                    onSubmitted: _handleSubmitted,
+                    onSubmitted: (text) {
+                      final selectedDoc = context.read<DocumentProvider>().selectedDocument;
+                      if (selectedDoc != null) {
+                        _handleSubmitted(text, selectedDoc);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please select a document first')),
+                        );
+                      }
+                    },
                     decoration: const InputDecoration(
                       hintText: 'Send a message',
                       border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(25.0))),
@@ -201,7 +212,19 @@ class _HomePageState extends State<HomePage> {
                 ),
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: IconButton(icon: const Icon(Icons.send), onPressed: () => _handleSubmitted(_textController.text)),
+                  child: IconButton(
+                    icon: const Icon(Icons.send),
+                    onPressed: () {
+                      final selectedDoc = context.read<DocumentProvider>().selectedDocument;
+                      if (selectedDoc != null) {
+                        _handleSubmitted(_textController.text, selectedDoc);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please select a document first')),
+                        );
+                      }
+                    },
+                  ),
                 ),
               ],
             ),

@@ -26,18 +26,14 @@ class ChatCubit extends Cubit<ChatState> {
     emit(state.copyWith(status: ChatStatus.success, messages: messages));
   }
 
-  Future<void> sendMessage(String message) async {
+  Future<void> sendMessage(String message, Document document) async {
     try {
       emit(state.copyWith(status: ChatStatus.loading));
       // get documents from content
-      List<Document> documents = await DocumentsRepository.instance.getAllDocuments();
       final ChatMessagesRepository chatMessagesRepository = ChatMessagesRepository.instance;
 
       String content = "";
-      if (documents.isNotEmpty) {
-        final docContent = documents.map((e) => e.content).join('\n');
-        content += docContent.substring(0, min(4096, docContent.length));
-      }
+      content += document.content?.substring(0, min(4096, document.content?.length ?? 0)) ?? "";
 
       // Save the prompt to history
       final prompt = Prompt(

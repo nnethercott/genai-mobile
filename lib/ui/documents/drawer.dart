@@ -7,6 +7,9 @@ import 'package:genai_mobile/models/document_type.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
+
+import '../../../providers/document_provider.dart';
 
 class ZipImportService {
   /// Imports a ZIP file from a URL and extracts all PDF files from it
@@ -113,6 +116,15 @@ class DocumentsDrawer extends StatelessWidget {
                         color: Theme.of(context).colorScheme.primary,
                       ),
                       title: Text(document.title),
+                      tileColor: context.watch<DocumentProvider>().selectedDocument?.id == document.id
+                          ? Theme.of(context).colorScheme.primaryContainer
+                          : null,
+                      titleTextStyle: context.watch<DocumentProvider>().selectedDocument?.id == document.id
+                          ? TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.bold,
+                            )
+                          : null,
                       trailing: IconButton(
                         icon: Icon(
                           Icons.delete,
@@ -141,7 +153,10 @@ class DocumentsDrawer extends StatelessWidget {
                           );
                         },
                       ),
-                      onTap: () => onDocumentSelected(document),
+                      onTap: () {
+                        context.read<DocumentProvider>().setSelectedDocument(document);
+                        onDocumentSelected(document);
+                      },
                     )),
               ],
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genai_mobile/dao/hive_registrar.g.dart';
+import 'package:genai_mobile/providers/document_provider.dart';
 import 'package:genai_mobile/providers/llm_provider.dart';
 import 'package:genai_mobile/providers/theme_provider.dart';
 import 'package:genai_mobile/repositories/documents_repository.dart';
@@ -44,6 +45,7 @@ Future<void> main() async {
           create: (_) => ThemeProvider(),
           child: const MyApp(),
         ),
+        ChangeNotifierProvider(create: (_) => DocumentProvider()),
       ],
       child: const MyApp(),
     ),
