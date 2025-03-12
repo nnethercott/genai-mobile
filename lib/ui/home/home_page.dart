@@ -3,11 +3,13 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:genai_mobile/models/ai_model.dart';
 import 'package:genai_mobile/providers/document_provider.dart';
 import 'package:genai_mobile/providers/theme_provider.dart';
 import 'package:genai_mobile/ui/documents/bloc/cubit.dart';
 import 'package:genai_mobile/ui/documents/drawer.dart';
 import 'package:genai_mobile/ui/home/bloc/cubit.dart';
+import 'package:genai_mobile/ui/home/bloc/model_selection_cubit.dart';
 import 'package:genai_mobile/ui/home/bloc/state.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -61,6 +63,33 @@ class _HomePageState extends State<HomePage> {
               appBar: AppBar(
                 elevation: 1,
                 actions: [
+                  BlocBuilder<ModelSelectionCubit, ModelSelectionState>(
+                    builder: (context, state) {
+                      final currentModel = AIModels.getModelById((state as ModelSelectionInitial).selectedModel);
+                      return PopupMenuButton<String>(
+                        icon: const Icon(Icons.settings),
+                        tooltip: 'Select AI Model',
+                        onSelected: (String modelId) {
+                          context.read<ModelSelectionCubit>().selectModel(modelId);
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return AIModels.allModels.map((model) {
+                            return PopupMenuItem<String>(
+                              value: model.id,
+                              child: ListTile(
+                                title: Text(model.name),
+                                subtitle: Text(
+                                  model.description,
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                                selected: model.id == currentModel.id,
+                              ),
+                            );
+                          }).toList();
+                        },
+                      );
+                    },
+                  ),
                   IconButton(
                     icon: Icon(context.watch<ThemeProvider>().isDarkMode ? Icons.light_mode : Icons.dark_mode),
                     onPressed: () {
