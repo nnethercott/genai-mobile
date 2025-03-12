@@ -86,6 +86,6 @@ class DocumentRepositoryImpl implements DocumentsRepository {
   @override
   Future<void> cleanAllDB() async {
     await _isReady.future;
-    await Hive.box<Document>(_boxName).clear();
+    // await Hive.box<Document>(_boxName).clear();
   }
 }
