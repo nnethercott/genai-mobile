@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genai_mobile/models/document.dart';
 import 'package:genai_mobile/models/prompt.dart';
 import 'package:genai_mobile/repositories/chat_messages_repository.dart';
-import 'package:genai_mobile/repositories/documents_repository.dart';
 import 'package:genai_mobile/repositories/fllama_repository.dart';
 import 'package:genai_mobile/repositories/prompt_repository.dart';
 import 'package:genai_mobile/ui/home/bloc/state.dart';
@@ -26,14 +25,14 @@ class ChatCubit extends Cubit<ChatState> {
     emit(state.copyWith(status: ChatStatus.success, messages: messages));
   }
 
-  Future<void> sendMessage(String message, Document document) async {
+  Future<void> sendMessage(String message, Document? document) async {
     try {
       emit(state.copyWith(status: ChatStatus.loading));
       // get documents from content
       final ChatMessagesRepository chatMessagesRepository = ChatMessagesRepository.instance;
 
       String content = "";
-      content += document.content?.substring(0, min(4096, document.content?.length ?? 0)) ?? "";
+      content += document?.content?.substring(0, min(4096, document.content?.length ?? 0)) ?? "";
 
       // Save the prompt to history
       final prompt = Prompt(

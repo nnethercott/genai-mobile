@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:genai_mobile/models/document.dart';
 import 'package:genai_mobile/providers/document_provider.dart';
 import 'package:genai_mobile/providers/theme_provider.dart';
 import 'package:genai_mobile/ui/documents/bloc/cubit.dart';
@@ -29,12 +28,12 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  void _handleSubmitted(String text, Document document) {
+  void _handleSubmitted(String text) {
     _textController.clear();
     if (text.trim().isEmpty) return;
 
-    // Use ChatCubit to send message
-    context.read<ChatCubit>().sendMessage(text, document);
+    final selectedDoc = context.read<DocumentProvider>().selectedDocument;
+    context.read<ChatCubit>().sendMessage(text, selectedDoc);
   }
 
   @override
@@ -86,7 +85,7 @@ class _HomePageState extends State<HomePage> {
                   //   _messages.insert(
                   //       0, ChatMessage(text: "Selected: ${document.title}", isUserMessage: true, file: File(document.contentPath ?? '')));
                   // });
-                  Navigator.pop(context);
+                  //  Navigator.pop(context);
                 },
                 onImportZipFromUrl: (url) async {
                   try {
@@ -193,16 +192,7 @@ class _HomePageState extends State<HomePage> {
                 Flexible(
                   child: TextField(
                     controller: _textController,
-                    onSubmitted: (text) {
-                      final selectedDoc = context.read<DocumentProvider>().selectedDocument;
-                      if (selectedDoc != null) {
-                        _handleSubmitted(text, selectedDoc);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please select a document first')),
-                        );
-                      }
-                    },
+                    onSubmitted: (text) => _handleSubmitted(text),
                     decoration: const InputDecoration(
                       hintText: 'Send a message',
                       border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(25.0))),
@@ -214,16 +204,7 @@ class _HomePageState extends State<HomePage> {
                   margin: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: IconButton(
                     icon: const Icon(Icons.send),
-                    onPressed: () {
-                      final selectedDoc = context.read<DocumentProvider>().selectedDocument;
-                      if (selectedDoc != null) {
-                        _handleSubmitted(_textController.text, selectedDoc);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please select a document first')),
-                        );
-                      }
-                    },
+                    onPressed: () => _handleSubmitted(_textController.text),
                   ),
                 ),
               ],

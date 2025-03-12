@@ -111,6 +111,8 @@ class DocumentsDrawer extends StatelessWidget {
               padding: EdgeInsets.zero,
               children: [
                 ...documents.map((document) => ListTile(
+                      key: UniqueKey(),
+                      style: ListTileStyle.drawer,
                       leading: Icon(
                         Icons.file_present,
                         color: Theme.of(context).colorScheme.primary,
@@ -154,7 +156,13 @@ class DocumentsDrawer extends StatelessWidget {
                         },
                       ),
                       onTap: () {
-                        context.read<DocumentProvider>().setSelectedDocument(document);
+                        final currentDoc = context.read<DocumentProvider>().selectedDocument;
+                        // If the same document is tapped again, unselect it
+                        if (currentDoc?.id == document.id) {
+                          context.read<DocumentProvider>().clearSelectedDocument();
+                        } else {
+                          context.read<DocumentProvider>().setSelectedDocument(document);
+                        }
                         onDocumentSelected(document);
                       },
                     )),
