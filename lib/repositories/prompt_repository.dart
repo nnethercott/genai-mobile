@@ -31,4 +31,8 @@ class PromptRepository {
   Future<void> deletePrompt(Prompt prompt) async {
     await _box.delete(prompt.key);
   }
+
+  Future<void> cleanAllDB() async {
+    await _box.clear();
+  }
 }

@@ -21,4 +21,10 @@ class ChatMessagesRepositoryImpl implements ChatMessagesRepository {
     final box = await Hive.openBox<ChatMessage>(_boxName);
     return box.values.toList().reversed.toList();
   }
+
+  @override
+  Future<void> cleanAllDB() async {
+    final box = await Hive.openBox<ChatMessage>(_boxName);
+    await box.clear();
+  }
 }

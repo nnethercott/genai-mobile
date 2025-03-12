@@ -67,6 +67,14 @@ class _HomePageState extends State<HomePage> {
                     },
                     tooltip: 'Toggle theme',
                   ),
+                  IconButton(
+                    icon: Icon(Icons.cleaning_services),
+                    onPressed: () {
+                      context.read<DocumentsCubit>().clearDocuments();
+                      context.read<ChatCubit>().clearChatHistory();
+                    },
+                    tooltip: 'Settings',
+                  ),
                 ],
               ),
               drawer: DocumentsDrawer(
@@ -176,23 +184,28 @@ class _HomePageState extends State<HomePage> {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8.0),
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-        child: Row(
+        child: Column(
           children: [
-            Flexible(
-              child: TextField(
-                controller: _textController,
-                onSubmitted: _handleSubmitted,
-                decoration: const InputDecoration(
-                  hintText: 'Send a message',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(25.0))),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            Row(
+              children: [
+                Flexible(
+                  child: TextField(
+                    controller: _textController,
+                    onSubmitted: _handleSubmitted,
+                    decoration: const InputDecoration(
+                      hintText: 'Send a message',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(25.0))),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    ),
+                  ),
                 ),
-              ),
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: IconButton(icon: const Icon(Icons.send), onPressed: () => _handleSubmitted(_textController.text)),
+                ),
+              ],
             ),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: IconButton(icon: const Icon(Icons.send), onPressed: () => _handleSubmitted(_textController.text)),
-            ),
+            const SizedBox(height: 30),
           ],
         ),
       ),

@@ -82,4 +82,10 @@ class DocumentRepositoryImpl implements DocumentsRepository {
     // ).toList());
     throw UnimplementedError();
   }
+
+  @override
+  Future<void> cleanAllDB() async {
+    await _isReady.future;
+    await Hive.box<Document>(_boxName).clear();
+  }
 }

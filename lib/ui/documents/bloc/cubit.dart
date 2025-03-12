@@ -79,4 +79,10 @@ class DocumentsCubit extends Cubit<DocumentsState> {
       emit(DocumentsError(e.toString()));
     }
   }
+
+  Future<void> clearDocuments() async {
+    await _repository.cleanAllDB();
+    final documents = await _repository.getAllDocuments();
+    emit(DocumentsLoaded(documents));
+  }
 }

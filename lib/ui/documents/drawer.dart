@@ -180,9 +180,9 @@ class DocumentsDrawer extends StatelessWidget {
   void _showZipUrlInputDialog(BuildContext context) {
     final TextEditingController urlController = TextEditingController();
     final Map<String, String> predefinedUrls = {
-      'Travel in Mauritus': 'https://example.com/sample-docs.zip',
-      'Repairing stuff': 'https://example.com/user-guide.zip',
-      'Rust and flutter': 'https://example.com/api-docs.zip',
+      'Manual breakDown': 'https://22c3-157-143-146-15.ngrok-free.app/api/files/download',
+      //'Repairing stuff': 'https://example.com/user-guide.zip',
+      //'Rust and flutter': 'https://example.com/api-docs.zip',
     };
 
     showDialog(

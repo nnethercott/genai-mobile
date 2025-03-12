@@ -32,9 +32,9 @@ class ChatCubit extends Cubit<ChatState> {
       // get documents from content
       List<Document> documents = await DocumentsRepository.instance.getAllDocuments();
       final ChatMessagesRepository chatMessagesRepository = ChatMessagesRepository.instance;
-      
+
       String content = "";
-      if(documents.isNotEmpty){
+      if (documents.isNotEmpty) {
         final docContent = documents.map((e) => e.content).join('\n');
         content += docContent.substring(0, min(4096, docContent.length));
       }
@@ -56,7 +56,7 @@ class ChatCubit extends Cubit<ChatState> {
       });
 
       print("###################");
-      for(final m in pastMessages){
+      for (final m in pastMessages) {
         print('Role: ${m.role}, text: ${m.text}');
       }
 
@@ -80,5 +80,11 @@ class ChatCubit extends Cubit<ChatState> {
 
   List<Prompt> getPromptHistory() {
     return _promptRepository.promptsHistory();
+  }
+
+  Future<void> clearChatHistory() async {
+    await _promptRepository.cleanAllDB();
+    await ChatMessagesRepository.instance.cleanAllDB();
+    emit(state.copyWith(messages: []));
   }
 }

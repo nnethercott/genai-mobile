@@ -12,4 +12,5 @@ abstract class ChatMessagesRepository {
 
   Future<ChatMessage> addMessage({required String text, bool isUserMessage = false});
   Future<List<ChatMessage>> getMessages();
+  Future<void> cleanAllDB();
 }
