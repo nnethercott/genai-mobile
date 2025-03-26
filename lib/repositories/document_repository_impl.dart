@@ -2,14 +2,12 @@ import 'dart:async';
 
 import 'package:genai_mobile/models/document.dart';
 import 'package:genai_mobile/models/document_type.dart';
-import 'package:genai_mobile/rag/engine.dart';
 import 'package:hive_ce/hive.dart';
 
 import 'documents_repository.dart';
 
 class DocumentRepositoryImpl implements DocumentsRepository {
   static const String _boxName = 'documents';
-  ObjectBoxService? vectorStore;
   final Completer _isReady = Completer.sync();
   bool isReadyIndicator = false;
 
@@ -19,7 +17,6 @@ class DocumentRepositoryImpl implements DocumentsRepository {
 
   Future<void> _init() async {
     await Hive.openBox<Document>(_boxName);
-    // vectorStore ??= await ObjectBoxService.create();
 
     if (!isReadyIndicator) {
       _isReady.complete();

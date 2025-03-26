@@ -25,18 +25,24 @@ class ChatCubit extends Cubit<ChatState> {
     emit(state.copyWith(status: ChatStatus.success, messages: messages));
   }
 
-  Future<void> sendMessage(String message, Document? document) async {
+  Future<void> sendMessage(String message, [List<Document> documents = const []]) async {
     try {
       emit(state.copyWith(status: ChatStatus.loading));
       // get documents from content
       final ChatMessagesRepository chatMessagesRepository = ChatMessagesRepository.instance;
 
       String content = "";
-      content += document?.content?.substring(0, min(4096, document.content?.length ?? 0)) ?? "";
+
+      // inject context from documents
+      for (final (idx, document) in documents.indexed){
+        content += "Reference $idx:\n";
+        content += document.content?.substring(0, min(4096, document.content?.length ?? 0)) ?? "";
+        content += "\n\n";
+      }
 
       // Save the prompt to history
       final prompt = Prompt(
-        content.isEmpty ? message : '$message\nsome optional context to help with your answer: $content',
+        content.isEmpty ? message : '$message\nsome optional context to help with your answer:\n$content',
         DateTime.now(),
       );
       await _promptRepository.addPrompt(prompt);
