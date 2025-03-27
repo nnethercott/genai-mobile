@@ -25,18 +25,25 @@ class ChatCubit extends Cubit<ChatState> {
     emit(state.copyWith(status: ChatStatus.success, messages: messages));
   }
 
-  Future<void> sendMessage(String message, Document? document) async {
+  // FIXME: chat history adds tokens, we need to truncate everything to 4096 tokens
+  Future<void> sendMessage(String message, [List<Document> documents = const []]) async {
     try {
       emit(state.copyWith(status: ChatStatus.loading));
       // get documents from content
       final ChatMessagesRepository chatMessagesRepository = ChatMessagesRepository.instance;
 
       String content = "";
-      content += document?.content?.substring(0, min(4096, document.content?.length ?? 0)) ?? "";
+
+      // inject context from documents
+      for (final (idx, document) in documents.indexed) {
+        content += "Reference ${idx+1}:\n";
+        content += document.content!;
+        content += "\n\n";
+      }
 
       // Save the prompt to history
       final prompt = Prompt(
-        content.isEmpty ? message : '$message\nsome optional context to help with your answer: $content',
+        content.isEmpty ? message : '$message\nsome optional context to help with your answer:\n$content',
         DateTime.now(),
       );
       await _promptRepository.addPrompt(prompt);
@@ -59,10 +66,10 @@ class ChatCubit extends Cubit<ChatState> {
       final userMessage = await chatMessagesRepository.addMessage(text: message, isUserMessage: true);
       emit(state.copyWith(messages: [userMessage, ...state.messages]));
 
-      final response = await _fllamaRepository.runInference(
-        prompt.prompt,
-        pastMessages,
-      );
+      // NOTE: system prompt adds tokens ... 
+      final response = await _fllamaRepository.runInference(prompt.prompt.substring(0, min(prompt.prompt.length, 3000)), []
+          // pastMessages,
+          );
       final aiMessage = await chatMessagesRepository.addMessage(text: response.latestResultString, isUserMessage: false);
       emit(state.copyWith(
         status: ChatStatus.success,

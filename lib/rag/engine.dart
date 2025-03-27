@@ -34,7 +34,7 @@ class ObjectBoxService implements VectorService {
 
   static Future<ObjectBoxService> create() async {
     if (_instance != null) {
-      print(_instance!._getAll());
+      // print(_instance!._getAll());
       return _instance!;
     }
 
@@ -51,11 +51,11 @@ class ObjectBoxService implements VectorService {
     return _instance!;
   }
 
-  @override
-  List<InternalDoc> _getAll() {
-    final box = store.box<InternalDoc>();
-    return box.getAll();
-  }
+  // @override
+  // List<InternalDoc> _getAll() {
+  //   final box = store.box<InternalDoc>();
+  //   return box.getAll();
+  // }
 
   @override
   Future<void> add(Document doc) async {
@@ -112,7 +112,6 @@ Future<List<double>> getEmbeding(String text, MiniLmL6V2 model) async {
 /// Interface for document retreival
 abstract class VectorService {
   Future<void> add(Document doc);
-  List<InternalDoc> _getAll();
   Future<void> delete(Document doc);
   Future<List<String>> query(String prompt, [int nNearestNeighbors = 10]);
 }

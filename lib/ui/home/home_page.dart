@@ -4,8 +4,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genai_mobile/models/ai_model.dart';
-import 'package:genai_mobile/providers/document_provider.dart';
 import 'package:genai_mobile/providers/theme_provider.dart';
+import 'package:genai_mobile/rag/engine.dart';
 import 'package:genai_mobile/ui/documents/bloc/cubit.dart';
 import 'package:genai_mobile/ui/documents/drawer.dart';
 import 'package:genai_mobile/ui/home/bloc/cubit.dart';
@@ -23,6 +23,14 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final TextEditingController _textController = TextEditingController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late final VectorService ragService;
+
+  // init rag service ONCE here
+  @override
+  void initState() {
+    super.initState();
+    ObjectBoxService.create().then((rag) => ragService = (rag as VectorService));
+  }
 
   @override
   void dispose() {
@@ -30,12 +38,13 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  void _handleSubmitted(String text) {
+  Future<void> _handleSubmitted(String text) async {
     _textController.clear();
     if (text.trim().isEmpty) return;
 
-    final selectedDoc = context.read<DocumentProvider>().selectedDocument;
-    context.read<ChatCubit>().sendMessage(text, selectedDoc);
+    // final selectedDoc = context.read<DocumentProvider>().selectedDocument;
+    final relevantDocuments = await context.read<DocumentsCubit>().loadRelevantDocuments(text, ragService);
+    context.read<ChatCubit>().sendMessage(text, relevantDocuments);
   }
 
   @override
@@ -124,14 +133,16 @@ class _HomePageState extends State<HomePage> {
                     for (var document in documents) {
                       if (document.contentPath != null) {
                         context.read<DocumentsCubit>().addDocument(document.contentPath!);
+                        await ragService.add(document);
                       }
                     }
                   } catch (e) {
                     print('Error picking file: $e');
                   }
                 },
-                onDocumentDelete: (document) {
+                onDocumentDelete: (document) async {
                   context.read<DocumentsCubit>().deleteDocument(document);
+                  await ragService.delete(document);
                 },
                 onPickFile: () async {
                   try {
@@ -142,7 +153,11 @@ class _HomePageState extends State<HomePage> {
                     if (result != null) {
                       final path = result.files.single.path!;
                       if (path.toLowerCase().endsWith('.pdf')) {
-                        context.read<DocumentsCubit>().addDocument(path);
+                        context.read<DocumentsCubit>().addDocument(path).then((document) {
+                          if (document != null) {
+                            ragService.add(document);
+                          }
+                        });
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Please select a PDF file')),

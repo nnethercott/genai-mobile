@@ -9,7 +9,6 @@ import 'documents_repository.dart';
 
 class DocumentRepositoryImpl implements DocumentsRepository {
   static const String _boxName = 'documents';
-  ObjectBoxService? vectorStore;
   final Completer _isReady = Completer.sync();
   bool isReadyIndicator = false;
 
@@ -19,7 +18,6 @@ class DocumentRepositoryImpl implements DocumentsRepository {
 
   Future<void> _init() async {
     await Hive.openBox<Document>(_boxName);
-    // vectorStore ??= await ObjectBoxService.create();
 
     if (!isReadyIndicator) {
       _isReady.complete();
@@ -31,7 +29,6 @@ class DocumentRepositoryImpl implements DocumentsRepository {
   Future<void> addDocument(Document document) async {
     await _isReady.future;
     await Hive.box<Document>(_boxName).add(document);
-    // await vectorStore!.add(document);
   }
 
   @override
@@ -42,7 +39,6 @@ class DocumentRepositoryImpl implements DocumentsRepository {
     if (key != -1) {
       await box.deleteAt(key);
     }
-    await vectorStore?.delete(document);
   }
 
   @override
@@ -72,15 +68,15 @@ class DocumentRepositoryImpl implements DocumentsRepository {
   }
 
   @override
-  Future<List<Document>> getRelevantDocuments(
-    String prompt, [
-    int n = 10,
-  ]) async {
-    // final docIds = await vectorStore!.query(prompt, n);
-    // return await getAllDocuments().then((docs)=>docs.where(
-    //   (d)=>docIds.contains(d.id)
-    // ).toList());
-    throw UnimplementedError();
+  Future<List<Document>> getRelevantDocuments({
+    required String prompt,
+    required VectorService vectorStore,
+    int n = 5,
+  }) async {
+    final docIds = await vectorStore.query(prompt, n);
+    return await getAllDocuments().then(
+      (docs) => docs.where((d) => docIds.contains(d.id)).toList(),
+    );
   }
 
   @override
