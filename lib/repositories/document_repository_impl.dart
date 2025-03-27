@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:genai_mobile/models/document.dart';
 import 'package:genai_mobile/models/document_type.dart';
+import 'package:genai_mobile/rag/engine.dart';
 import 'package:hive_ce/hive.dart';
 
 import 'documents_repository.dart';
@@ -28,7 +29,6 @@ class DocumentRepositoryImpl implements DocumentsRepository {
   Future<void> addDocument(Document document) async {
     await _isReady.future;
     await Hive.box<Document>(_boxName).add(document);
-    // await vectorStore!.add(document);
   }
 
   @override
@@ -39,7 +39,6 @@ class DocumentRepositoryImpl implements DocumentsRepository {
     if (key != -1) {
       await box.deleteAt(key);
     }
-    await vectorStore?.delete(document);
   }
 
   @override
@@ -69,15 +68,15 @@ class DocumentRepositoryImpl implements DocumentsRepository {
   }
 
   @override
-  Future<List<Document>> getRelevantDocuments(
-    String prompt, [
-    int n = 10,
-  ]) async {
-    // final docIds = await vectorStore!.query(prompt, n);
-    // return await getAllDocuments().then((docs)=>docs.where(
-    //   (d)=>docIds.contains(d.id)
-    // ).toList());
-    throw UnimplementedError();
+  Future<List<Document>> getRelevantDocuments({
+    required String prompt,
+    required VectorService vectorStore,
+    int n = 5,
+  }) async {
+    final docIds = await vectorStore.query(prompt, n);
+    return await getAllDocuments().then(
+      (docs) => docs.where((d) => docIds.contains(d.id)).toList(),
+    );
   }
 
   @override

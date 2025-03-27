@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genai_mobile/models/document.dart';
 import 'package:genai_mobile/models/document_type.dart';
+import 'package:genai_mobile/rag/engine.dart';
 import 'package:genai_mobile/repositories/documents_repository.dart';
 
 // States
@@ -88,5 +89,23 @@ class DocumentsCubit extends Cubit<DocumentsState> {
     await _repository.cleanAllDB();
     final documents = await _repository.getAllDocuments();
     emit(DocumentsLoaded(documents));
+  }
+
+  // FIXME: configure n relevant docs in settings or something,
+  // right now just 1
+  Future<List<Document>> loadRelevantDocuments(String prompt, VectorService vectorStore) async {
+    try {
+      emit(DocumentsLoading());
+      final documents = await _repository.getRelevantDocuments(
+        prompt: prompt,
+        vectorStore: vectorStore,
+        n: 1,
+      );
+      emit(DocumentsLoaded(documents));
+      return documents;
+    } catch (e) {
+      emit(DocumentsError(e.toString()));
+    }
+    return [];
   }
 }

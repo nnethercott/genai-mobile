@@ -4,8 +4,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:genai_mobile/models/ai_model.dart';
-import 'package:genai_mobile/models/document.dart';
-import 'package:genai_mobile/providers/document_provider.dart';
 import 'package:genai_mobile/providers/theme_provider.dart';
 import 'package:genai_mobile/rag/engine.dart';
 import 'package:genai_mobile/ui/documents/bloc/cubit.dart';
@@ -25,14 +23,14 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final TextEditingController _textController = TextEditingController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  late final ObjectBoxService ragService;
+  late final VectorService ragService;
 
   // init rag service ONCE here
   @override
-    void initState() {
-      super.initState();
-      ObjectBoxService.create().then((rag)=>ragService = rag);
-    }
+  void initState() {
+    super.initState();
+    ObjectBoxService.create().then((rag) => ragService = (rag as VectorService));
+  }
 
   @override
   void dispose() {
@@ -40,18 +38,12 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  Future<void> _handleSubmitted(String text) async{
+  Future<void> _handleSubmitted(String text) async {
     _textController.clear();
     if (text.trim().isEmpty) return;
 
     // final selectedDoc = context.read<DocumentProvider>().selectedDocument;
-
-    // filter relevant documents based on `text`
-    final uids = await ragService.query(text, 5);
-    final allDocuments = await context.read<DocumentsCubit>().loadDocuments();
-    final relevantDocuments = allDocuments.where((d)=>uids.contains(d.id)).toList();
-
-    // chat
+    final relevantDocuments = await context.read<DocumentsCubit>().loadRelevantDocuments(text, ragService);
     context.read<ChatCubit>().sendMessage(text, relevantDocuments);
   }
 
@@ -161,10 +153,10 @@ class _HomePageState extends State<HomePage> {
                     if (result != null) {
                       final path = result.files.single.path!;
                       if (path.toLowerCase().endsWith('.pdf')) {
-                        context.read<DocumentsCubit>().addDocument(path).then((document){
-                          if(document!=null){
+                        context.read<DocumentsCubit>().addDocument(path).then((document) {
+                          if (document != null) {
                             ragService.add(document);
-                          } 
+                          }
                         });
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
