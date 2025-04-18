@@ -1,5 +1,9 @@
 # genai_mobile
 
+https://github.com/user-attachments/assets/3f67f101-9f99-4bf4-9858-dcba5528609e
+
+
+
 ## Add model to hive
 
 create a model file in lib/models/
